@@ -20,5 +20,6 @@ RUN useradd thelia -m \
     && mkdir -p /application \
     && chown thelia:thelia -R /application \
     && chown -hR thelia:thelia /usr/local/apache2/logs \
+    && touch /application/dummy.html
 
 USER thelia

@@ -24,8 +24,13 @@ with_xdebug=${with_xdebug:-'n'}
 export WITH_XDEBUG=with_xdebug
 echo -e "\e[1;37;46m Starting docker \e[0m"
 
-docker-compose up -d php-fpm
-docker-compose exec php-fpm composer create-project thelia/thelia-project thelia 2.5
+docker-compose up -d --build php-fpm
+
+if [ ! -f Thelia ]
+then
+  docker-compose exec php-fpm composer --no-interaction create-project thelia/thelia-project thelia 2.5
+fi
+
 rm -Rf thelia/.docker
 mv -vn thelia/{.,}* ./
 rm -Rf thelia
@@ -41,8 +46,11 @@ else
   echo "Template files "$template_name" already exists"
 fi
 
-docker-compose up -d --build
-docker-compose exec php-fpm docker-init
+docker-compose up -d --build webserver
+docker-compose up -d --build mariadb
+docker-compose up -d --build encore
+
+sh .docker/php-fpm/docker-init.sh
 
 if [[ $1 = "-demo" ]]; then
   docker-compose exec php-fpm php local/setup/import.php
