@@ -1,0 +1,3 @@
+.idea
+/.docker/mariadb/data/*
+.env

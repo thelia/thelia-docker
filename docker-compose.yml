@@ -1,0 +1,63 @@
+version: "3.8"
+
+services:
+  mariadb:
+    container_name: docker-thelia-mariadb
+    build:
+      context: .docker/mariadb
+    volumes:
+      - .:/application:ro
+      - .docker/mariadb/data:/var/lib/mysql:rw
+      - .docker/mariadb/scripts:/docker-entrypoint-initdb.d:delegated
+    restart: on-failure
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: thelia_laravel
+      MYSQL_USER: thelia
+      MYSQL_PASSWORD: thelia
+    ports:
+      - "8086:3306"
+
+  webserver:
+    container_name: docker-thelia-webserver
+    build:
+      context: .docker/apache
+    volumes:
+      - .:/application:ro
+      - ./.docker/apache/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
+      - ./.docker/apache/vhost.conf:/usr/local/apache2/conf/sites-available/vhost.conf:ro
+    ports:
+      - "8080:80"
+
+  php-fpm:
+    container_name: docker-thelia-php-fpm
+    build:
+      context: .docker/php-fpm
+      args:
+        - WITH_XDEBUG=${WITH_XDEBUG}
+    volumes:
+      - .:/application:delegated
+    environment:
+      - PHP_IDE_CONFIG
+      - XDEBUG_CONFIG
+      - WITH_XDEBUG
+      - ACTIVE_FRONT_TEMPLATE
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+
+  encore:
+    container_name: docker-thelia-encore
+    build:
+      context: .docker/encore
+    working_dir: /application/templates/frontOffice/${ACTIVE_FRONT_TEMPLATE:-modern}
+    environment:
+      BROWSERSYNC_PROXY: http://localhost:8081
+    volumes:
+      - ./templates/frontOffice/${ACTIVE_FRONT_TEMPLATE:-modern}:/application/templates/frontOffice/${ACTIVE_FRONT_TEMPLATE:-modern}:delegated
+      - ./templates/frontOffice/${ACTIVE_FRONT_TEMPLATE:-modern}/node_modules:/application/templates/frontOffice/${ACTIVE_FRONT_TEMPLATE:-modern}/node_modules
+    depends_on:
+      - php-fpm
+    ports:
+      - 8081:8081
