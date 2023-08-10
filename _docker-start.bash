@@ -19,21 +19,25 @@ if ! test -f ".env"; then
   echo -e "\e[1;37;42m .env file created with success with template name \"${template_name}\" \e[0m"
 fi
 
-read -p "$(echo -e "\e[1;37;45m Do you want to enable php xdebug ? [Y/n] : \e[0m")" with_xdebug
-with_xdebug=${with_xdebug:-'n'}
-export WITH_XDEBUG=with_xdebug
-echo -e "\e[1;37;46m Starting docker \e[0m"
-
-docker-compose up -d --build php-fpm
 
 if [ ! -f Thelia ]
 then
-  docker-compose exec php-fpm composer --no-interaction create-project thelia/thelia-project thelia 2.5
-fi
+  read -p "$(echo -e "\e[1;37;45m Do you want to enable php xdebug ? [Y/n] : \e[0m")" with_xdebug
+  with_xdebug=${with_xdebug:-'n'}
+  export WITH_XDEBUG=with_xdebug
+  echo -e "\e[1;37;46m Starting docker \e[0m"
 
-rm -Rf thelia/.docker
-mv -vn thelia/{.,}* ./
-rm -Rf thelia
+  docker-compose up -d --build php-fpm
+  docker-compose exec php-fpm composer --no-interaction create-project thelia/thelia-project thelia 2.5.*
+  rm -Rf thelia/.docker
+  # TODO enable
+  #cp thelia/.gitignore .gitignore
+  mv -vn thelia/{.,}* ./
+  rm -Rf thelia
+  rm -f templates/frontOffice/modern/.dockerignore
+else
+  docker-compose up -d php-fpm
+fi
 
 set -o allexport
 eval $(cat '.env' | sed -e '/^#/d;/^\s*$/d' -e 's/\(\w*\)[ \t]*=[ \t]*\(.*\)/\1=\2/' -e "s/=['\"]\(.*\)['\"]/=\1/g" -e "s/'/'\\\''/g" -e "s/=\(.*\)/='\1'/g")
@@ -46,11 +50,18 @@ else
   echo "Template files "$template_name" already exists"
 fi
 
-docker-compose up -d --build webserver
-docker-compose up -d --build mariadb
-docker-compose up -d --build encore
 
-sh .docker/php-fpm/docker-init.sh
+if [ ! -f Thelia ]
+then
+  docker-compose up -d --build webserver
+  docker-compose up -d --build mariadb
+  docker-compose up -d --build node
+  sh .docker/php-fpm/docker-init.sh
+else
+  docker-compose up -d webserver
+  docker-compose up -d mariadb
+  docker-compose up -d node
+fi
 
 if [[ $1 = "-demo" ]]; then
   docker-compose exec php-fpm php local/setup/import.php

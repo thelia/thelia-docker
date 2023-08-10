@@ -54,6 +54,7 @@ RUN  mkdir /rootFs \
     && chmod 700 /rootFs
 
 COPY ./php.ini /usr/local/etc/php/php.ini
+COPY ./php-cli.ini /usr/local/etc/php/php-cli.ini
 
 USER thelia
 
