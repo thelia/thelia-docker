@@ -1,26 +1,24 @@
-FROM node:14 as thelia_node
+FROM node:14
 
 ENV NODE_ENV development
 ENV YARN_CACHE_FOLDER /application/cache
 ARG ACTIVE_FRONT_TEMPLATE
 ENV ACTIVE_FRONT_TEMPLATE=${ACTIVE_FRONT_TEMPLATE:-modern}
 
-WORKDIR /application
+RUN mkdir -p /application/templates/frontOffice/${ACTIVE_FRONT_TEMPLATE}/
+RUN useradd thelia -m
+RUN usermod -a -G thelia thelia
+RUN chown thelia:thelia -R /application
 
-EXPOSE 8081
+USER thelia
+WORKDIR /application/templates/frontOffice/${ACTIVE_FRONT_TEMPLATE}/
 
-COPY templates/frontOffice/${ACTIVE_FRONT_TEMPLATE}/package.json ./application/templates/frontOffice/${ACTIVE_FRONT_TEMPLATE}/
-COPY templates/frontOffice/${ACTIVE_FRONT_TEMPLATE}/yarn.lock ./application/templates/frontOffice/${ACTIVE_FRONT_TEMPLATE}/
-RUN mkdir /application/cache
+COPY --chown=thelia:thelia templates/frontOffice/${ACTIVE_FRONT_TEMPLATE}/package.json .
+COPY --chown=thelia:thelia templates/frontOffice/${ACTIVE_FRONT_TEMPLATE}/yarn.lock .
 
-RUN set -eux; \
-	yarn --production=false
+RUN set -eux
+RUN yarn install --production=false
+RUN mkdir -p /application/templates/frontOffice/${ACTIVE_FRONT_TEMPLATE}/src
+RUN echo 'console.log("Hello world!");' > /application/templates/frontOffice/${ACTIVE_FRONT_TEMPLATE}/src/index.js
 
-COPY .docker/node/docker-entrypoint.sh /usr/local/bin/docker-entrypoint-node
-RUN chmod +x /usr/local/bin/docker-entrypoint-node
-
-COPY . ./
-
-ENTRYPOINT ["docker-entrypoint-node"]
-CMD ["yarn", "start"]
-
+CMD ["yarn", "build"]

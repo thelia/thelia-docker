@@ -2,7 +2,8 @@ FROM php:8.2-fpm
 
 WORKDIR "/application"
 ARG XDEBUG_VERSION=3.2
-ARG WITH_XDEBUG='n'
+ARG WITH_XDEBUG=0
+ARG WITH_SPX="0"
 
 # Composer install
 COPY --from=composer /usr/bin/composer /usr/bin/composer
@@ -31,8 +32,20 @@ RUN docker-php-ext-configure gd \
 
 
 # XDebug extension
-RUN if [ "$WITH_XDEBUG" = 'Y' ]; \
-    then pecl install xdebug-${XDEBUG_VERSION} docker-php-ext-enable xdebug; fi
+RUN if [ "$WITH_XDEBUG" = "1" ]; then \
+    pecl install xdebug-${XDEBUG_VERSION} docker-php-ext-enable xdebug; \
+    fi
+
+# php-spx
+RUN if [ "$WITH_SPX" = "1" ]; then \
+        git clone https://github.com/NoiseByNorthwest/php-spx.git \
+        && cd php-spx \
+        && git checkout release/latest \
+        && phpize \
+        && ./configure \
+        && make \
+        && make install; \
+    fi
 
 # Intl extension
 RUN apt-get install libicu-dev
