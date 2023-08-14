@@ -13,16 +13,17 @@ Help() {
   exit
 }
 
+# OPTIONS
 with_xdebug=0
 with_spx=0
 while [ -n "$1" ]; do
   case "$1" in
-  	--xdebug) with_xdebug=1 ;;
-  	--spx) with_spx=1 ;;
-  	help) Help ;;
-    *) echo "Option $1 not recognized" ;;
-  	esac
-  	shift
+  --xdebug) with_xdebug=1 ;;
+  --spx) with_spx=1 ;;
+  help) Help ;;
+  *) echo "Option $1 not recognized" ;;
+  esac
+  shift
 done
 
 # CREATE ENV FILE
@@ -64,14 +65,14 @@ if [ ! -f Thelia ]; then
   docker-compose up -d --build mailhog
   #docker-compose up -d --build node
 
-  # INSTALL THELIA AND MODERN THEME
-  if [[ $ACTIVE_FRONT_TEMPLATE == 'modern' ]]; then
+  # COPY THEME SOURCES
+  mkdir -p "templates/frontOffice/$ACTIVE_FRONT_TEMPLATE"
+  if [ ! -z "$ACTIVE_FRONT_TEMPLATE" ] && [ ! -d "templates/frontOffice/$ACTIVE_FRONT_TEMPLATE" ]; then
+    echo -e "\e[1;37;46m Copying template files modern to templates/frontOffice/$ACTIVE_FRONT_TEMPLATE \e[0m"
+    cp -r "templates/frontOffice/modern" "templates/frontOffice/$ACTIVE_FRONT_TEMPLATE";
     echo -e 'Install thelia and init theme modern'
     chmod +x .docker/php-fpm/docker-init-modern.sh
     sh .docker/php-fpm/docker-init-modern.sh
-  else
-    echo -e 'Install thelia'
-    docker-compose exec php-fpm php Thelia thelia:install --db_host=mariadb --db_port=3306 --db_username=root --db_name="${MYSQL_DATABASE}" --db_password="${MYSQL_ROOT_PASSWORD}"
   fi
 else
   # ONLY START SERVICES
@@ -80,11 +81,6 @@ else
   docker-compose up -d mariadb
   docker-compose up -d mailhog
   #docker-compose up -d node
-fi
-
-# DEMO DATAS
-if [[ $1 = "-demo" ]]; then
-  docker-compose exec php-fpm php local/setup/import.php
 fi
 
 # CACHE

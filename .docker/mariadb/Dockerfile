@@ -1,4 +1,4 @@
-FROM mariadb:10.11
+FROM mariadb:11.1
 
 WORKDIR "/application"
 
