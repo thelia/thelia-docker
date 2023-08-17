@@ -69,7 +69,7 @@ if [ ! -f Thelia ]; then
   mkdir -p "templates/frontOffice/$ACTIVE_FRONT_TEMPLATE"
   if [ ! -z "$ACTIVE_FRONT_TEMPLATE" ] && [ ! -d "templates/frontOffice/$ACTIVE_FRONT_TEMPLATE" ]; then
     echo -e "\e[1;37;46m Copying template files modern to templates/frontOffice/$ACTIVE_FRONT_TEMPLATE \e[0m"
-    cp -r "templates/frontOffice/modern" "templates/frontOffice/$ACTIVE_FRONT_TEMPLATE";
+    cp -r ./templates/frontOffice/modern/* ./templates/frontOffice/"$ACTIVE_FRONT_TEMPLATE"
     echo -e 'Install thelia and init theme modern'
     chmod +x .docker/php-fpm/docker-init-modern.sh
     sh .docker/php-fpm/docker-init-modern.sh
