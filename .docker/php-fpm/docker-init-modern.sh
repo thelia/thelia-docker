@@ -40,7 +40,7 @@ if ! test -f "$DB_FILE"; then
     docker-compose exec php-fpm php Thelia template:set frontOffice "${ACTIVE_FRONT_TEMPLATE}"
     docker-compose exec php-fpm php Thelia template:set backOffice "${ACTIVE_ADMIN_TEMPLATE}"
     docker-compose exec php-fpm php Thelia thelia:config set imagine_graphic_driver imagick
-    docker-compose exec php-fpm php Thelia admin:create --login_name thelia --password thelia --last_name thelia --first_name thelia --email thelia@example.com
+    docker-compose exec php-fpm php Thelia admin:create --login_name thelia2 --password thelia2 --last_name thelia --first_name thelia --email thelia@example.com
 fi
 
 docker-compose exec php-fpm php Thelia module:refresh
